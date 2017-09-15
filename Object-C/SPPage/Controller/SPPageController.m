@@ -20,7 +20,6 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 @property (nonatomic, strong) NSMutableDictionary <NSNumber *, UIViewController *> *memCacheDic;
 @property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSNumber *> *lastContentOffset;
 @property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSNumber *> *lastContentSize;
-@property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSNumber *> *lastContentInsetBottom;
 
 @property (nonatomic, strong) SPPageContentView *scrollView;
 
@@ -44,7 +43,6 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
         self.memCacheDic = [[NSMutableDictionary <NSNumber *, UIViewController *> alloc] init];
         self.lastContentOffset = [[NSMutableDictionary <NSNumber *, NSNumber *> alloc] init];
         self.lastContentSize = [[NSMutableDictionary <NSNumber *, NSNumber *> alloc] init];
-        self.lastContentInsetBottom = [[NSMutableDictionary<NSNumber*, NSNumber*> alloc] init];
     }
     return self;
 }
@@ -59,7 +57,6 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
     [self.lastContentOffset removeAllObjects];
     [self.lastContentSize removeAllObjects];
-    [self.lastContentInsetBottom removeAllObjects];
     [self.memCacheDic removeAllObjects];
 
     [self addVisibleViewContorllerWithIndex:self.currentPageIndex];
@@ -575,15 +572,9 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
             return;
         }
 
-        if (ceil([self.lastContentSize[@(index)] floatValue]) == ceil(scrollView.contentSize.height) && (self.lastContentInsetBottom && ceil([self.lastContentInsetBottom[@(index)] floatValue] == ceil(scrollView.contentInset.bottom)))) {
+        if (ceil([self.lastContentSize[@(index)] floatValue]) == ceil(scrollView.contentSize.height)) {
             self.lastContentOffset[@(index)] = @(scrollView.contentOffset.y);
         }
-
-        if (!self.lastContentInsetBottom[@(index)] || !self.lastContentSize[@(index)]) {
-            self.lastContentOffset[@(index)] = @(scrollView.contentOffset.y);
-        }
-
-        self.lastContentInsetBottom[@(index)] = @(scrollView.contentInset.bottom);
 
         [self.delegate scrollWithPageOffset:scrollView.contentOffset.y index:index];
 
