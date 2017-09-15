@@ -60,7 +60,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     [self.memCacheDic removeAllObjects];
 
     [self addVisibleViewContorllerWithIndex:self.currentPageIndex];
-    [self updateScrollViewLayoutIfNeeded];
+    [self updateScrollViewLayoutIfNeed];
 
     if ([self.delegate respondsToSelector:@selector(willChangeInit)]) {
         [self.delegate willChangeInit];
@@ -103,7 +103,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
         self.firstWillAppear = NO;
 
-        [self updateScrollViewLayoutIfNeeded];
+        [self updateScrollViewLayoutIfNeed];
     }
 
     [[self controllerAtIndex:self.currentPageIndex] beginAppearanceTransition:YES animated:YES];
@@ -130,15 +130,15 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     [[self controllerAtIndex:self.currentPageIndex] endAppearanceTransition];
 }
 
-- (void) viewWillLayoutSubviews
+- (void)viewWillLayoutSubviews
 {
     [super viewWillLayoutSubviews];
     if (self.firstWillLayoutSubViews) {
-        [self updateScrollViewLayoutIfNeeded];
-        [self updateScrollViewDisplayIndexIfNeeded];
+        [self updateScrollViewLayoutIfNeed];
+        [self updateScrollViewDisplayIndexIfNeed];
         self.firstWillLayoutSubViews = NO;
     } else {
-        [self updateScrollViewLayoutIfNeeded];
+        [self updateScrollViewLayoutIfNeed];
     }
 }
 
@@ -274,7 +274,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
 {
-    [self updatePageViewAfterTragging:scrollView];
+    [self updatePageViewAfterDragging:scrollView];
 }
 
 -(void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset
@@ -289,7 +289,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     return NO;
 }
 
-- (void) updatePageViewAfterTragging:(UIScrollView *)scrollView
+- (void)updatePageViewAfterDragging:(UIScrollView *)scrollView
 {
     NSInteger newIndex = [self.scrollView calcIndexWithOffset:scrollView.contentOffset.x width:scrollView.frame.size.width];
     NSInteger oldIndex = self.currentPageIndex;
@@ -359,7 +359,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     [super addChildViewController:childController];
 }
 
-- (void)updateScrollViewDisplayIndexIfNeeded
+- (void)updateScrollViewDisplayIndexIfNeed
 {
     if (self.scrollView.frame.size.width > 0)  {
         [self addVisibleViewContorllerWithIndex:self.currentPageIndex];
@@ -372,7 +372,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     }
 }
 
-- (void)updateScrollViewLayoutIfNeeded
+- (void)updateScrollViewLayoutIfNeed
 {
     if (self.scrollView.frame.size.width > 0) {
         CGFloat width = [self pageCount] * self.scrollView.frame.size.width;
