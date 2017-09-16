@@ -12,7 +12,7 @@
 
 typedef NS_ENUM(NSInteger, CoverScrollStyle) {
     CoverScrollStyleHeight = 0,//需要做Cover的背景图片拉伸的选择这个 否则选择下面的Style
-    CoverScrollStyleTop = 0,
+    CoverScrollStyleTop = 1,
 
 };
 
