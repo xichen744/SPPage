@@ -550,10 +550,15 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
         UIEdgeInsets contentInset = scrollView.contentInset;
 
         scrollView.contentInset =  UIEdgeInsetsMake([self.dataSource pageTopAtIndex:index], contentInset.left, contentInset.bottom, contentInset.right);
+        
+#ifdef __IPHONE_11_0
         if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0) {// ios11 苹果加了一个安全区域 会自动修改scrollView的contentOffset
             scrollView.contentInsetAdjustmentBehavior =  UIScrollViewContentInsetAdjustmentNever;
         }
+#endif
+
     }
+    
 
 
     [scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:nil];
