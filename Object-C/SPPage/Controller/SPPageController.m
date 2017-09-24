@@ -404,15 +404,17 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
         [self scrollBeginAnimation:animated];
         if (animated) {
             //页面切换动画
-            if (self.lastSelectedIndex != self.currentPageIndex) {
+            if (self.lastSelectedIndex != self.currentPageIndex) {//如果非交互切换的index和currentindex一样，则什么都不做
                 __block CGSize pageSize = self.scrollView.frame.size;
                 SPPageScrollDirection direction = (self.lastSelectedIndex < self.currentPageIndex) ? PageRight :PageLeft;
                 UIView *lastView = [self controllerAtIndex:self.lastSelectedIndex].view;
                 UIView *currentView = [self controllerAtIndex:self.currentPageIndex].view;
+                //oldselectindex 就是第一个动画选择的index
                 UIView *oldSelectView = [self controllerAtIndex:oldSelectIndex].view;
                 CGFloat backgroundIndex = [self.scrollView calcIndexWithOffset:self.scrollView.contentOffset.x width:self.scrollView.frame.size.width];
                 UIView *backgroundView = nil;
-                if (oldSelectView.layer.animationKeys.count > 0 && lastView.layer.animationKeys.count > 0) {
+                //这里考虑的是第一次动画还没结束，就开始第二次动画，需要把当前的处的位置的view给隐藏掉，避免出现一闪而过的情形。
+                if (oldSelectView.layer.animationKeys.count > 0 && lastView.layer.animationKeys.count > 0) {//
                     UIView *tmpView = [self controllerAtIndex:backgroundIndex].view;
                     if (tmpView != currentView && tmpView != lastView) {
                         backgroundView = tmpView;
@@ -420,13 +422,16 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
                     }
                 }
                 
+                //这里考虑的是第一次动画还没结束，就开始第二次动画，需要把之前的动画给结束掉，oldselectindex 就是第一个动画选择的index
                 [self.scrollView.layer removeAllAnimations];
                 [oldSelectView.layer removeAllAnimations];
                 [lastView.layer removeAllAnimations];
                 [currentView.layer removeAllAnimations];
-                
+                //这里需要还原第一次切换的view的位置
                 [self moveBackToOriginPositionIfNeeded:oldSelectView index:oldSelectIndex];
                 
+                
+                //下面就是lastview 切换到currentview的代码，direction则是切换的方向，这里把lastview和currentview 起始放到了相邻位置在动画结束的时候，还原位置。
                 [self.scrollView bringSubviewToFront:lastView];
                 
                 [self.scrollView bringSubviewToFront:currentView];
