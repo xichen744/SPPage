@@ -354,7 +354,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 {
     if (![self.childViewControllers containsObject:childController]) {
         [self addChildViewController:childController];
-        [self didMoveToParentViewController:self];
+        [self didMoveToParentViewController:childController];
     }
     [super addChildViewController:childController];
 }
