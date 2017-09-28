@@ -38,6 +38,12 @@
     self.pagingEnabled = YES;
     self.backgroundColor = [UIColor clearColor];
     self.scrollsToTop = NO;
+    
+#ifdef __IPHONE_11_0
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0) {// ios11 苹果加了一个安全区域 会自动修改scrollView的contentOffset
+        self.contentInsetAdjustmentBehavior =  UIScrollViewContentInsetAdjustmentNever;
+    }
+#endif
 }
 
 - (void)addSubview:(UIView *)view
@@ -79,7 +85,6 @@
     return CGPointMake(offsetX, 0);
 }
 
-
 - (NSInteger)calcIndexWithOffset:(CGFloat)offset width:(CGFloat)width
 {
     NSInteger startIndex = (NSInteger)offset/width;
@@ -89,13 +94,5 @@
 
     return startIndex;
 }
-
-/*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect {
-    // Drawing code
-}
-*/
 
 @end

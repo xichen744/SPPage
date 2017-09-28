@@ -53,11 +53,14 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
         [view removeFromSuperview];
     }
 
-
-
     [self.lastContentOffset removeAllObjects];
     [self.lastContentSize removeAllObjects];
-    [self.memCacheDic removeAllObjects];
+    
+    if (self.memCacheDic.count > 0) {
+        [self clearObserver];
+        [self.memCacheDic removeAllObjects];
+    }
+    
 
     [self addVisibleViewContorllerWithIndex:self.currentPageIndex];
     [self updateScrollViewLayoutIfNeed];
@@ -376,8 +379,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 {
     if (self.scrollView.frame.size.width > 0) {
         CGFloat width = [self pageCount] * self.scrollView.frame.size.width;
-        CGFloat height = self.scrollView.frame.size.height;
-        [self.scrollView updateScrollViewLayoutWithSize:CGSizeMake(width, height)];
+        [self.scrollView updateScrollViewLayoutWithSize:CGSizeMake(width, 0)];
     }
 }
 
@@ -530,10 +532,8 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 }
 
 
--(void)dealloc
+- (void)clearObserver
 {
-    self.delegate = nil;
-    self.dataSource = nil;
     for (NSNumber *key in self.memCacheDic) {
         UIViewController *vc = self.memCacheDic[key];
         if ([vc conformsToProtocol:@protocol(SPPageSubControllerDataSource)]) {
@@ -542,6 +542,13 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
             [scrollView removeObserver:self forKeyPath:@"contentSize"];
         }
     }
+}
+
+-(void)dealloc
+{
+    self.delegate = nil;
+    self.dataSource = nil;
+    [self clearObserver];
 
     self.memCacheDic = nil;
 }
@@ -564,8 +571,6 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
     }
     
-
-
     [scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:nil];
     [scrollView addObserver:self forKeyPath:@"contentSize" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:nil];
 }
@@ -588,7 +593,6 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
         [self.delegate scrollWithPageOffset:scrollView.contentOffset.y index:index];
 
-        NSLog(@"contentInset top:%@, bottom:%@, left:%@, right:%@", @(scrollView.contentInset.top), @(scrollView.contentInset.bottom), @(scrollView.contentInset.left), @(scrollView.contentInset.right));
     } else if ([keyPath isEqualToString:@"contentSize"]) {
         if (self.lastContentSize[@(index)] && ( ceil([self.lastContentSize[@(index)] floatValue])  != ceil(scrollView.contentSize.height))) {
             self.lastContentSize[@(index)] = @(scrollView.contentSize.height);

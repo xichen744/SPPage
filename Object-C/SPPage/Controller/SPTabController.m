@@ -41,8 +41,6 @@
     }
 
     [self setTabViewTop:top];
-
-    NSLog(@"tabViewoffset:%@",@(top));
 }
 
 - (void)setTabViewTop:(CGFloat)tabViewTop
@@ -279,6 +277,7 @@
                 SPTabController *bSelf = wSelf;
                 SPTagBarScrollView *scrollView = (SPTagBarScrollView *)bSelf.tabView;
                 scrollView.markViewScroll = YES;
+                [self updateTabBarWithIndex:floor(ratio+0.5)];
 
             }];
         } else {
@@ -342,7 +341,7 @@
 
 - (CGFloat)pageTopAtIndex:(NSInteger)index
 {
-    return [self preferTabY] + [self preferTabHAtIndex:index];
+    return [self preferTabY] + [self preferTabHAtIndex:index]-[self preferPageFrame].origin.y;
 }
 
 - (UIScreenEdgePanGestureRecognizer *)screenEdgePanGestureRecognizer
