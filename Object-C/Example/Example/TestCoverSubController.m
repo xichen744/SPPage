@@ -7,6 +7,7 @@
 //
 
 #import "TestCoverSubController.h"
+#import "ViewController.h"
 
 @interface TestCoverSubController () <UITableViewDelegate, UITableViewDataSource>
 
@@ -42,6 +43,17 @@
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     return 20;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
+    
+    ViewController *vc = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"SUID_ViewController"];
+    vc.navTitle = [NSString stringWithFormat:@"Row%@",@(indexPath.row)];
+    [self.navigationController pushViewController:vc animated:YES];
+
+    
 }
 
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath

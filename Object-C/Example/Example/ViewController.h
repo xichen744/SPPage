@@ -10,6 +10,7 @@
 
 @interface ViewController : SPCoverController
 
+@property (nonatomic, strong) NSString *navTitle;
 
 @end
 

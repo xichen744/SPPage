@@ -23,7 +23,8 @@
     self.minYPullUp = 64;
     self.automaticallyAdjustsScrollViewInsets = NO;
     self.navigationController.navigationBarHidden=NO;
-    self.navigationItem.title = @"SPPage";
+    self.navigationItem.title = self.navTitle?:@"SPPage";
+    if (!self.navTitle)
     self.navigationController.navigationBar.barTintColor = [UIColor redColor];
 }
 
