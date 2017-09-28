@@ -11,6 +11,9 @@ Installation
 
 Copy codes or git specs.
 
+attention
+please set ContainerVc property automaticallyAdjustsScrollViewInsets NO
+
 Contact
 
 Email:376197328@qq.com
