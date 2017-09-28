@@ -20,7 +20,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.minYPullUp = 0;
+    self.minYPullUp = 64;
     self.automaticallyAdjustsScrollViewInsets = NO;
     self.navigationController.navigationBarHidden=NO;
     self.navigationItem.title = @"SPPage";
