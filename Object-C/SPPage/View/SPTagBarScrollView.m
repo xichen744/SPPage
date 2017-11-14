@@ -154,6 +154,10 @@
 //点击 和初始化使用
 - (void)markViewToIndex:(NSInteger)index animatied:(BOOL)animated
 {
+    if  (index >= self.tagViewsCache.count || index < 0) {
+        return;
+    }
+
     if (![self needMarkView]) {
         [self reloadHighlight];
     } else {
@@ -271,7 +275,7 @@
         return;
     }
 
-    if ( index <0 || self.tagViewsCache.count <= index) {
+    if  (index >= self.tagViewsCache.count || index < 0) {
         return;
     }
 
