@@ -573,6 +573,8 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     
     [scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:nil];
     [scrollView addObserver:self forKeyPath:@"contentSize" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:nil];
+
+    scrollView.contentOffset =  CGPointMake(0, -scrollView.contentInset.top) ;
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
