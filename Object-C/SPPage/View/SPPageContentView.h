@@ -7,12 +7,14 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "SPPageProtocol.h"
 
 @interface SPPageContentView : UIScrollView<UIScrollViewDelegate>
 
 - (CGRect)calcVisibleViewControllerFrameWithIndex:(NSInteger)index;
 - (CGPoint)calOffsetWithIndex:(NSInteger)index width:(CGFloat)width maxWidth:(CGFloat)maxWidth;
 - (NSInteger)calcIndexWithOffset:(CGFloat)offset width:(CGFloat)width;
-- (void)updateScrollViewLayoutWithSize:(CGSize)size;
+
+- (void)setItem:(id<SPPageControllerDataSource>)item;
 
 @end

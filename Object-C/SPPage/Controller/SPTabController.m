@@ -27,7 +27,14 @@
 
 @implementation SPTabController
 
+
 - (void)tabDragWithOffset:(CGFloat)offset
+{
+    
+    [self setTabViewTop:[self tabScrollTopWithContentOffset:offset]];
+}
+
+- (CGFloat)tabScrollTopWithContentOffset:(CGFloat)offset
 {
     CGFloat top = [self preferTabY]-offset;
     if (offset >= 0) {//上滑
@@ -39,9 +46,9 @@
             top = self.maxYPullDown;
         }
     }
-
-    [self setTabViewTop:top];
+    return top;
 }
+
 
 - (void)setTabViewTop:(CGFloat)tabViewTop
 {
@@ -74,9 +81,7 @@
         toVCTemp.preferScrollView.scrollsToTop = YES;
     }
 
-    if (self.cannotScrollWithPageOffset) {
-        [self changeToSubControllerOffset:toVC isDelay:YES];
-    }
+    [self changeToSubControllerOffset:toVC isDelay:YES];
 
 }
 
@@ -88,49 +93,28 @@
 - (void)changeToSubControllerOffset:(UIViewController *)toVC isDelay:(BOOL)isDelay
 {
     if (!toVC || [self numberOfControllers] <=1) {
-       
+        self.cannotScrollWithPageOffset = NO;
         return;
     }
-
+    
     if ([toVC conformsToProtocol:@protocol(SPPageSubControllerDataSource)]) {
-
         UIViewController<SPPageSubControllerDataSource> *toVCTemp =  (UIViewController<SPPageSubControllerDataSource> *)toVC;
         NSInteger newIndex = [self.pageController indexOfController:toVCTemp];
-        CGFloat scrollOffset = [self scrollViewOffsetAtIndex:newIndex];
         CGFloat pageTop = [self pageTopAtIndex:newIndex];
-        CGFloat offset = [toVCTemp preferScrollView].contentOffset.y+pageTop;
-        CGFloat top = [self preferTabY]-(offset);
-        if (offset >= 0) {//上滑
-            if (top <= self.minYPullUp) {
-                top = self.minYPullUp;
-            }
-        } else {//下拉
-            if (top >= self.maxYPullDown) {
-                top = self.maxYPullDown;
-            }
-        }
+        CGFloat top =  [self tabScrollTopWithContentOffset:[toVCTemp preferScrollView].contentOffset.y+pageTop];
+        
         //如果计算出来的高度一样，不用去修改offset
-        if (top != self.tabViewTop) {
-            if (isDelay) {
-                __weak SPTabController *wSelf = self;
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.1f * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    SPTabController *bSelf = wSelf;
-
-                    bSelf.cannotScrollWithPageOffset = NO;
-                    [toVCTemp preferScrollView].contentOffset =  CGPointMake(0, scrollOffset);
-                    //  self.cannotScrollWithPageOffset = NO;
-                });
-            } else {
-                self.cannotScrollWithPageOffset = NO;
-                [toVCTemp preferScrollView].contentOffset =  CGPointMake(0, scrollOffset);
-
-            }
-
-
+        if ( fabs(top -self.tabViewTop) > 0.1) {
+            CGFloat scrollOffset = [self scrollViewOffsetAtIndex:newIndex];
+            self.cannotScrollWithPageOffset = NO;
+            [toVCTemp preferScrollView].contentOffset =  CGPointMake(0, scrollOffset);
+            
         } else {
             self.cannotScrollWithPageOffset = NO;
-            // self.cannotScrollWithPageOffset = NO;
         }
+        
+    } else {
+        self.cannotScrollWithPageOffset = NO;
     }
 }
 
@@ -250,14 +234,24 @@
 
 }
 
+
 - (void)reloadTabH:(BOOL)isTabScroll
 {
+    if (self.currentIndex < 0) {
+        return;
+    }
     self.tabView.frame  = [self preferTabFrame];
+
     if (!isTabScroll) {
         self.pageController.view.frame = [self preferPageFrame];
     } else {
-        [self.pageController resizePageAtIndex:self.pageController.currentPageIndex offset:[self scrollViewOffsetAtIndex:self.pageController.currentPageIndex] isNeedChangeOffset:[self tabViewTop] > self.minYPullUp];
+        [self.pageController resizePageAtIndex:self.pageController.currentPageIndex offset:[self scrollViewOffsetAtIndex:self.currentIndex] isNeedChangeOffset:self.tabViewTop > self.minYPullUp atBeginOffsetChangeOffset:self.tabViewTop == self.minYPullUp];
     }
+}
+
+- (NSInteger)currentIndex
+{
+    return self.pageController.currentPageIndex;
 }
 
 #pragma SPPageControllerDelegate
@@ -381,7 +375,7 @@
 
 - (CGFloat)preferTabY
 {
-    return 64;
+    return KNAVIGATIONANDSTATUSBARHEIGHT;
 }
 
 - (CGFloat)preferTabX
@@ -471,12 +465,26 @@
 #pragma SPTabDelegate
 - (void)didPressTabForIndex:(NSInteger)index
 {
-    [self.pageController showPageAtIndex:index animated:YES];
+    if ([self isSubPageCanScrollForIndex:index]) {
+        [self.pageController showPageAtIndex:index animated:YES];
+
+    }
+    
 }
 
 - (void)willChangeInit
 {
     self.cannotScrollWithPageOffset = YES;
+}
+
+-(BOOL)isTabCanPressForIndex:(NSInteger)index
+{
+    return [self isSubPageCanScrollForIndex:index];
+}
+
+-(BOOL)isSubPageCanScrollForIndex:(NSInteger)index
+{
+    return YES;
 }
 
 

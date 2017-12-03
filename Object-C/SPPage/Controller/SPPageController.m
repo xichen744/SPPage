@@ -52,9 +52,9 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     for (UIView *view in self.scrollView.subviews) {
         [view removeFromSuperview];
     }
-
+    
     [self.lastContentOffset removeAllObjects];
-    [self.lastContentSize removeAllObjects];
+        [self.lastContentSize removeAllObjects];
     
     if (self.memCacheDic.count > 0) {
         [self clearObserver];
@@ -73,6 +73,8 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
         [self.delegate pageviewController:self willLeaveFromVC:[self controllerAtIndex:self.lastSelectedIndex] toViewController:[self controllerAtIndex:self.currentPageIndex]];
     }
 
+    [self.scrollView setItem:self.dataSource];
+    
     [self showPageAtIndex:self.currentPageIndex animated:YES];
 }
 
@@ -378,8 +380,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 - (void)updateScrollViewLayoutIfNeed
 {
     if (self.scrollView.frame.size.width > 0) {
-        CGFloat width = [self pageCount] * self.scrollView.frame.size.width;
-        [self.scrollView updateScrollViewLayoutWithSize:CGSizeMake(width, 0)];
+        [self.scrollView setItem:self.dataSource];
     }
 }
 
@@ -517,13 +518,23 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
         UIViewController *controller = [self.dataSource controllerAtIndex:index];
 
         if (controller) {
+            
+            if ([self.dataSource respondsToSelector:@selector(isSubPageCanScrollForIndex:)] && [self.dataSource isSubPageCanScrollForIndex:index]) {
+                
+                controller.view.hidden = NO;
+            } else {
+                controller.view.hidden = YES;
+            }
+            
             if ([controller conformsToProtocol:@protocol(SPPageSubControllerDataSource)]) {
                 [self bindController:(UIViewController<SPPageSubControllerDataSource> *)controller index:index];
             }
-
+            
             [self.memCacheDic setObject:controller forKey:@(index)];
-
+            
             [self addVisibleViewContorllerWithIndex:index];
+            
+           
         }
     }
 
@@ -539,7 +550,6 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
         if ([vc conformsToProtocol:@protocol(SPPageSubControllerDataSource)]) {
             UIScrollView *scrollView = [(UIViewController<SPPageSubControllerDataSource> *)vc preferScrollView];
             [scrollView removeObserver:self forKeyPath:@"contentOffset"];
-            [scrollView removeObserver:self forKeyPath:@"contentSize"];
         }
     }
 }
@@ -572,7 +582,6 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     }
     
     [scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:nil];
-    [scrollView addObserver:self forKeyPath:@"contentSize" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:nil];
 
     scrollView.contentOffset =  CGPointMake(0, -scrollView.contentInset.top) ;
 }
@@ -585,35 +594,27 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     UIScrollView *scrollView = object;
     NSInteger index = scrollView.tag;
     if ([keyPath isEqualToString:@"contentOffset"]) {
-        if ([self.delegate respondsToSelector:@selector(cannotScrollWithPageOffset)] && [self.delegate cannotScrollWithPageOffset]) {
+        if (scrollView.tag != self.currentPageIndex) {
             return;
         }
-
-        if (ceil([self.lastContentSize[@(index)] floatValue]) == ceil(scrollView.contentSize.height)) {
-            self.lastContentOffset[@(index)] = @(scrollView.contentOffset.y);
+        
+        if (self.memCacheDic.count == 0) {
+            return;
         }
-
-        [self.delegate scrollWithPageOffset:scrollView.contentOffset.y index:index];
-
-    } else if ([keyPath isEqualToString:@"contentSize"]) {
-        if (self.lastContentSize[@(index)] && ( ceil([self.lastContentSize[@(index)] floatValue])  != ceil(scrollView.contentSize.height))) {
-            self.lastContentSize[@(index)] = @(scrollView.contentSize.height);
-            if ( self.lastContentOffset[@(index)]) {
+        
+        BOOL isNotNeedChangeContentOffset = scrollView.contentSize.height < KSCREEN_HEIGHT-KNAVIGATIONANDSTATUSBARHEIGHT  &&  fabs (self.lastContentSize[@(index)].floatValue -scrollView.contentSize.height) > 1.0;
+        
+        if (self.delegate.cannotScrollWithPageOffset || isNotNeedChangeContentOffset) {
+            if (self.lastContentOffset[@(index)] &&  fabs (self.lastContentOffset[@(index)].floatValue -scrollView.contentOffset.y) >0.1) {
                 scrollView.contentOffset = CGPointMake(0, [self.lastContentOffset[@(index)] floatValue]);
             }
         } else {
-            self.lastContentSize[@(index)] = @(scrollView.contentSize.height);
+            self.lastContentOffset[@(index)] = @(scrollView.contentOffset.y);
+            [self.delegate scrollWithPageOffset:scrollView.contentOffset.y index:index];
         }
+        
+        self.lastContentSize[@(index)] = @(scrollView.contentSize.height);
 
-        if (!UIAccessibilityIsVoiceOverRunning()) {//在voiceover 强行修改contentsize会出现问题
-            if ([self.dataSource respondsToSelector:@selector(scrollMinHeight)]) {
-                CGFloat minHeight = [self.dataSource scrollMinHeight];
-                if (scrollView.contentSize.height < minHeight && [self.dataSource numberOfControllers] > 1) {
-                    self.lastContentSize[@(index)] = @(minHeight);
-                    scrollView.contentSize =  CGSizeMake(scrollView.contentSize.width, minHeight);
-                }
-            }
-        }
     }
 }
 
@@ -642,16 +643,24 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
 }
 
-- (void)resizePageAtIndex:(NSInteger)index offset:(CGFloat)offset isNeedChangeOffset:(BOOL)isNeedChangeOffset
+- (void)resizePageAtIndex:(NSInteger)index offset:(CGFloat)offset isNeedChangeOffset:(BOOL)isNeedChangeOffset atBeginOffsetChangeOffset:(BOOL)atBeginOffsetChangeOffset
 {
     UIViewController *vc = [self controllerAtIndex:index];
     if (vc && [vc conformsToProtocol:@protocol(SPPageSubControllerDataSource)]) {
         UIScrollView *scrollView = [(UIViewController<SPPageSubControllerDataSource> *)vc preferScrollView];
-
+        BOOL atBeginOffset = scrollView.contentOffset.y == - (scrollView.contentInset.top);
+        
+        CGPoint contentOffset = scrollView.contentOffset;
         scrollView.contentInset = UIEdgeInsetsMake([self.dataSource pageTopAtIndex:index], scrollView.contentInset.left, scrollView.contentInset.bottom, scrollView.contentInset.right);
+        scrollView.contentOffset = contentOffset;
         if (isNeedChangeOffset) {
             scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, offset);
+        } else {
+            if (atBeginOffsetChangeOffset && atBeginOffset) {
+                scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, offset);
+            }
         }
+        
     }
 }
 
@@ -671,5 +680,14 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     self.currentPageIndex = index;
 }
 
++ (BOOL)iPhoneX
+{
+    static BOOL b;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        b = CGSizeEqualToSize(CGSizeMake(1125, 2436), [[UIScreen mainScreen] currentMode].size);
+    });
+    return b;
+}
 
 @end

@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "TestCoverSubController.h"
+#import "SPPageController.h"
 
 #define CoverHeight 245
 
@@ -20,7 +21,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.minYPullUp = 64;
+    self.minYPullUp = KNAVIGATIONANDSTATUSBARHEIGHT;
     self.automaticallyAdjustsScrollViewInsets = NO;
     self.navigationController.navigationBarHidden=NO;
     self.navigationItem.title = self.navTitle?:@"SPPage";
@@ -71,6 +72,22 @@
 
     return coverController;
 
+}
+-(NSInteger)preferPageFirstAtIndex {
+    return 1;
+}
+
+-(BOOL)isSubPageCanScrollForIndex:(NSInteger)index
+{
+    if (index == 0) {
+        return NO;
+    }
+    
+    if (index >=3) {
+        return NO;
+    } else {
+        return YES;
+    }
 }
 
 -(void)viewDidAppear:(BOOL)animated

@@ -33,6 +33,8 @@
 - (CGFloat)markViewBottom;
 - (BOOL)needMarkView;
 
+- (BOOL)isTabCanPressForIndex:(NSInteger)index;
+
 @end
 
 @protocol SPTabDelegate <NSObject>

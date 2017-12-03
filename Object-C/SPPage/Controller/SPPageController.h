@@ -9,6 +9,11 @@
 #import <UIKit/UIKit.h>
 #import "SPPageProtocol.h"
 
+#define KSCREEN_WIDTH    [UIScreen mainScreen].bounds.size.width
+#define KSCREEN_HEIGHT   [UIScreen mainScreen].bounds.size.height
+#define KSTATUSBARHEIGHT ([SPPageController iPhoneX]?44.0:20.0)
+#define KNAVIGATIONANDSTATUSBARHEIGHT (KSTATUSBARHEIGHT+44.0)
+
 /**
  *
  *   替换系统的pageController
@@ -27,10 +32,12 @@
 //用于非交互切换接口
 - (void)showPageAtIndex:(NSInteger)index animated:(BOOL)animated;
 //在tab高度可变的情况，需要去动态修改 tableview的contentinset
-- (void)resizePageAtIndex:(NSInteger)index offset:(CGFloat)offset isNeedChangeOffset:(BOOL)isNeedChangeOffset;
+- (void)resizePageAtIndex:(NSInteger)index offset:(CGFloat)offset isNeedChangeOffset:(BOOL)isNeedChangeOffset atBeginOffsetChangeOffset:(BOOL)atBeginOffsetChangeOffset;
 
 - (NSInteger)indexOfController:(UIViewController *)vc;
 
 - (void)updateCurrentIndex:(NSInteger)index;
+
++ (BOOL)iPhoneX;
 
 @end
