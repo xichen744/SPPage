@@ -44,7 +44,7 @@
 - (UIScreenEdgePanGestureRecognizer *)screenEdgePanGestureRecognizer;//解决侧滑失效的问题
 - (BOOL)isPreLoad;//交互切换的时候 是否预加载
 
-- (BOOL)isSubPageCanScrollForIndex:(NSInteger)index;//表示这个
+- (BOOL)isSubPageCanScrollForIndex:(NSInteger)index;//表示这个页面是否可用
 
 
 @end
