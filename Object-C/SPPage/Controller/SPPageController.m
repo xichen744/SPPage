@@ -58,7 +58,13 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     
     if (self.memCacheDic.count > 0) {
         [self clearObserver];
+        NSArray *vcArray = self.memCacheDic.allValues;
         [self.memCacheDic removeAllObjects];
+        for (UIViewController *vc in vcArray) {
+            [self __removeFromParentViewController:vc];
+
+        }
+        vcArray = nil;
     }
     
 
