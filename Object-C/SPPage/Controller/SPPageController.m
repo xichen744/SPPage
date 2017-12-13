@@ -47,14 +47,15 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     return self;
 }
 
--(void)reloadPage
+
+- (void)clearMemory
 {
     for (UIView *view in self.scrollView.subviews) {
         [view removeFromSuperview];
     }
     
     [self.lastContentOffset removeAllObjects];
-        [self.lastContentSize removeAllObjects];
+    [self.lastContentSize removeAllObjects];
     
     if (self.memCacheDic.count > 0) {
         [self clearObserver];
@@ -62,11 +63,16 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
         [self.memCacheDic removeAllObjects];
         for (UIViewController *vc in vcArray) {
             [self __removeFromParentViewController:vc];
-
+            
         }
         vcArray = nil;
     }
-    
+}
+
+- (void)reloadPage
+{
+   
+    [self clearMemory];
 
     [self addVisibleViewContorllerWithIndex:self.currentPageIndex];
     [self updateScrollViewLayoutIfNeed];
@@ -191,8 +197,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    [self.memCacheDic removeAllObjects];
-    // Dispose of any resources that can be recreated.
+    [self clearMemory];
 }
 
 
