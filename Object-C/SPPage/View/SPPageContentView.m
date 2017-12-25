@@ -98,7 +98,7 @@
         }
         
         if (startIndex >= 0) {
-            if (![item respondsToSelector:@selector(isSubPageCanScrollForIndex:)] || ![item isSubPageCanScrollForIndex:i]) {
+            if ([item respondsToSelector:@selector(isSubPageCanScrollForIndex:)] && ![item isSubPageCanScrollForIndex:i]) {
                 endIndex = i;
                 break;
             }

@@ -530,7 +530,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
         if (controller) {
             
-            if ([self.dataSource respondsToSelector:@selector(isSubPageCanScrollForIndex:)] && [self.dataSource isSubPageCanScrollForIndex:index]) {
+            if (![self.dataSource respondsToSelector:@selector(isSubPageCanScrollForIndex:)] || [self.dataSource isSubPageCanScrollForIndex:index]) {
                 
                 controller.view.hidden = NO;
             } else {
