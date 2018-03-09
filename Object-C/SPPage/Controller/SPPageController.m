@@ -71,22 +71,8 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
 - (void)reloadPage
 {
-   
     [self clearMemory];
-
-    [self addVisibleViewContorllerWithIndex:self.currentPageIndex];
     [self updateScrollViewLayoutIfNeed];
-
-    if ([self.delegate respondsToSelector:@selector(willChangeInit)]) {
-        [self.delegate willChangeInit];
-    }
-
-    if ([self.delegate respondsToSelector:@selector(pageviewController:willLeaveFromVC:toViewController:)]) {
-        [self.delegate pageviewController:self willLeaveFromVC:[self controllerAtIndex:self.lastSelectedIndex] toViewController:[self controllerAtIndex:self.currentPageIndex]];
-    }
-
-    [self.scrollView setItem:self.dataSource];
-    
     [self showPageAtIndex:self.currentPageIndex animated:YES];
 }
 
@@ -96,8 +82,8 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     self.firstWillAppear = YES;
     self.firstDidAppear = YES;
     self.firstWillLayoutSubViews = YES;
-    self.scrollView = [[SPPageContentView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height)];
-    [self configScrollView:self.scrollView];
+   
+    [self configScrollView];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -165,16 +151,13 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     
 }
 
-- (BOOL)needIgnoreFMStatusBarStyle
+- (void)configScrollView
 {
-    return YES;
-}
+     self.scrollView = [[SPPageContentView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height)];
+    
+    self.scrollView.delegate = self;
 
-- (void)configScrollView:(UIScrollView *)scrollView
-{
-    scrollView.delegate = self;
-
-    [self.view addSubview:scrollView];
+    [self.view addSubview:self.scrollView];
 }
 
 - (UIScreenEdgePanGestureRecognizer *)__screenEdgePanGestureRecognizer
@@ -231,45 +214,29 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
         }
         NSInteger maxCount = [self pageCount];
 
-
-        if ([self isPreLoad]) {
-            if  (lastGuestIndex != self.guessToIndex && self.guessToIndex != self.currentPageIndex && self.guessToIndex >=0 && self.guessToIndex < maxCount) {
-
-                if ([self.delegate respondsToSelector:@selector(willChangeInit)]) {
-                    [self.delegate willChangeInit];
-                }
-
-                UIViewController *fromVC = [self controllerAtIndex:self.currentPageIndex];
-                UIViewController *toVc = [self controllerAtIndex:self.guessToIndex];
-
-                [self.delegate pageviewController:self willTransitionFromVC:fromVC toViewController:toVc];
+        
+        if (((self.guessToIndex != self.currentPageIndex && !self.scrollView.isDecelerating) || self.scrollView.isDecelerating) && lastGuestIndex != self.guessToIndex && self.guessToIndex >= 0 && self.guessToIndex <maxCount) {
+            if ([self.delegate respondsToSelector:@selector(willChangeInit)]) {
+                [self.delegate willChangeInit];
+            }
+            UIViewController *fromVC = [self controllerAtIndex:self.currentPageIndex];
+            UIViewController *toVc = [self controllerAtIndex:self.guessToIndex];
+            
+            [self.delegate pageviewController:self willTransitionFromVC:fromVC toViewController:toVc];
+            
+            if ([self isPreLoad]){
                 [toVc beginAppearanceTransition:YES animated:YES];
                 if (lastGuestIndex == self.currentPageIndex) {
                     [fromVC beginAppearanceTransition:NO animated:YES];
                 }
-
+                
 
                 if (lastGuestIndex != self.currentPageIndex && lastGuestIndex >=0 && lastGuestIndex < maxCount) {
                     UIViewController *lastGuestVC = [self controllerAtIndex:lastGuestIndex];
                     [lastGuestVC beginAppearanceTransition:NO animated:YES];
                     [lastGuestVC endAppearanceTransition];
                 }
-                
             }
-        } else {
-            if ((self.guessToIndex != self.currentPageIndex && !self.scrollView.isDecelerating) || self.scrollView.isDecelerating) {
-                if (lastGuestIndex != self.guessToIndex && self.guessToIndex >= 0 && self.guessToIndex <maxCount) {
-
-                    if ([self.delegate respondsToSelector:@selector(willChangeInit)]) {
-                        [self.delegate willChangeInit];
-                    }
-
-                    if ([self.delegate respondsToSelector:@selector(pageviewController:willTransitionFromVC:toViewController:)]) {
-                        [self.delegate pageviewController:self willTransitionFromVC:[self.memCacheDic objectForKey:@(self.currentPageIndex)] toViewController:[self.memCacheDic objectForKey:@(self.guessToIndex)]];
-                    }
-                }
-            }
-
         }
 
         if ([self.delegate respondsToSelector:@selector(scrollViewContentOffsetWithRatio:draging:)]) {
@@ -307,7 +274,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
 - (void)updatePageViewAfterDragging:(UIScrollView *)scrollView
 {
-    NSInteger newIndex = [self.scrollView calcIndexWithOffset:scrollView.contentOffset.x width:scrollView.frame.size.width];
+    NSInteger newIndex = [self.scrollView calcIndex];
     NSInteger oldIndex = self.currentPageIndex;
     self.currentPageIndex = newIndex;
     
@@ -346,13 +313,8 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     return [self.dataSource respondsToSelector:@selector(isPreLoad)] && [self.dataSource isPreLoad];
 }
 
-- (void)addVisibleViewContorllerWithIndex:(NSInteger)index
+- (void)addVisibleViewContorllerWithVC:(UIViewController *)vc index:(NSInteger)index
 {
-    if (index < 0 || index > [self pageCount]) {
-        return;
-    }
-
-    UIViewController *vc = [self controllerAtIndex:index];
  
     CGRect childViewFrame = [self.scrollView calcVisibleViewControllerFrameWithIndex:index];
     [self __addChildViewController:vc frame:childViewFrame];
@@ -378,8 +340,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 - (void)updateScrollViewDisplayIndexIfNeed
 {
     if (self.scrollView.frame.size.width > 0)  {
-        [self addVisibleViewContorllerWithIndex:self.currentPageIndex];
-        CGPoint newOffset = [self.scrollView calOffsetWithIndex:self.currentPageIndex width:self.scrollView.frame.size.width maxWidth:self.scrollView.contentSize.width];
+        CGPoint newOffset = [self.scrollView calOffsetWithIndex:self.currentPageIndex];
         if (newOffset.x != self.scrollView.contentOffset.x || newOffset.y != self.scrollView.contentOffset.y) {
             self.scrollView.contentOffset = newOffset;
         }
@@ -414,7 +375,6 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
             [self.delegate pageviewController:self willLeaveFromVC:[self controllerAtIndex:self.lastSelectedIndex] toViewController:[self controllerAtIndex:self.currentPageIndex]];
         }
 
-        [self addVisibleViewContorllerWithIndex:index];
         [self scrollBeginAnimation:animated];
         if (animated) {
             //页面切换动画
@@ -425,7 +385,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
                 UIView *currentView = [self controllerAtIndex:self.currentPageIndex].view;
                 //oldselectindex 就是第一个动画选择的index
                 UIView *oldSelectView = [self controllerAtIndex:oldSelectIndex].view;
-                CGFloat backgroundIndex = [self.scrollView calcIndexWithOffset:self.scrollView.contentOffset.x width:self.scrollView.frame.size.width];
+                CGFloat backgroundIndex = [self.scrollView calcIndex];
                 UIView *backgroundView = nil;
                 //这里考虑的是第一次动画还没结束，就开始第二次动画，需要把当前的处的位置的view给隐藏掉，避免出现一闪而过的情形。
                 if (oldSelectView.layer.animationKeys.count > 0 && lastView.layer.animationKeys.count > 0) {//
@@ -514,7 +474,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
     
     
     UIView *destView = view;
-    CGPoint originPostion = [self.scrollView calOffsetWithIndex:index width:self.scrollView.frame.size.width maxWidth:self.scrollView.contentSize.width];
+    CGPoint originPostion = [self.scrollView calOffsetWithIndex:index];
     if (destView.frame.origin.x != originPostion.x) {
         CGRect newFrame = destView.frame;
         newFrame.origin = originPostion;
@@ -530,7 +490,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
         if (controller) {
             
-            if (![self.dataSource respondsToSelector:@selector(isSubPageCanScrollForIndex:)] || [self.dataSource isSubPageCanScrollForIndex:index]) {
+            if ([self.dataSource respondsToSelector:@selector(isSubPageCanScrollForIndex:)] && [self.dataSource isSubPageCanScrollForIndex:index]) {
                 
                 controller.view.hidden = NO;
             } else {
@@ -543,7 +503,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
             
             [self.memCacheDic setObject:controller forKey:@(index)];
             
-            [self addVisibleViewContorllerWithIndex:index];
+            [self addVisibleViewContorllerWithVC:controller index:index];
             
            
         }
@@ -567,11 +527,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
 -(void)dealloc
 {
-    self.delegate = nil;
-    self.dataSource = nil;
-    [self clearObserver];
-
-    self.memCacheDic = nil;
+    [self clearMemory];
 }
 
 - (void)bindController:(UIViewController<SPPageSubControllerDataSource> *)controller index:(NSInteger)index
@@ -631,7 +587,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
 - (void)scrollAnimation:(BOOL)animated
 {
-    [self.scrollView setContentOffset:[self.scrollView calOffsetWithIndex:self.currentPageIndex width:self.scrollView.frame.size.width maxWidth:self.scrollView.contentSize.width] animated:NO];
+    [self.scrollView setContentOffset:[self.scrollView calOffsetWithIndex:self.currentPageIndex ] animated:NO];
 }
 
 - (void)scrollBeginAnimation:(BOOL)animated

@@ -12,8 +12,8 @@
 @interface SPPageContentView : UIScrollView<UIScrollViewDelegate>
 
 - (CGRect)calcVisibleViewControllerFrameWithIndex:(NSInteger)index;
-- (CGPoint)calOffsetWithIndex:(NSInteger)index width:(CGFloat)width maxWidth:(CGFloat)maxWidth;
-- (NSInteger)calcIndexWithOffset:(CGFloat)offset width:(CGFloat)width;
+- (CGPoint)calOffsetWithIndex:(NSInteger)index;
+- (NSInteger)calcIndex;
 
 - (void)setItem:(id<SPPageControllerDataSource>)item;
 

@@ -61,8 +61,11 @@
     return CGRectMake(offsetX, 0, self.frame.size.width, self.frame.size.height);
 }
 
-- (CGPoint)calOffsetWithIndex:(NSInteger)index width:(CGFloat)width maxWidth:(CGFloat)maxWidth
+- (CGPoint)calOffsetWithIndex:(NSInteger)index
 {
+    CGFloat width = self.frame.size.width;
+    CGFloat maxWidth = self.contentSize.width;
+    
     CGFloat offsetX = ((index) * width);
 
     if (offsetX < 0 ){
@@ -78,8 +81,10 @@
     return CGPointMake(offsetX, 0);
 }
 
-- (NSInteger)calcIndexWithOffset:(CGFloat)offset width:(CGFloat)width
+- (NSInteger)calcIndex
 {
+    CGFloat width = self.frame.size.width;
+    CGFloat offset = self.contentOffset.x;
     NSInteger startIndex = (NSInteger)offset/width;
     if (startIndex < 0) {
         startIndex = 0;
@@ -98,7 +103,7 @@
         }
         
         if (startIndex >= 0) {
-            if ([item respondsToSelector:@selector(isSubPageCanScrollForIndex:)] && ![item isSubPageCanScrollForIndex:i]) {
+            if (![item respondsToSelector:@selector(isSubPageCanScrollForIndex:)] || ![item isSubPageCanScrollForIndex:i]) {
                 endIndex = i;
                 break;
             }

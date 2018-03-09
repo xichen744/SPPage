@@ -94,7 +94,7 @@
 }
 
 -(BOOL)isPreLoad {
-    return YES;
+    return NO;
 }
 
 
