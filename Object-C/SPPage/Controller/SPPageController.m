@@ -180,7 +180,7 @@ typedef NS_ENUM(NSInteger,SPPageScrollDirection) {
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    [self clearMemory];
+   // [self clearMemory];
 }
 
 
